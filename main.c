@@ -22,15 +22,21 @@ int valor;
 // The child thread will execute this function
 void *transferencia(void *arg)
 {
-    printf("Careaio");
+    int tid = *((int *) arg);
+    free(arg);
+
     if (from.saldo >= valor)
-    { // 2
+    { 
         from.saldo -= valor;
         to.saldo += valor;
+        printf("Thread %i realizou uma trasnferência! c1: %d; c2: %d\n", tid, from.saldo, to.saldo);
     }
-    printf("Transferência concluída com sucesso!\n");
-    printf("Saldo de c1: %d\n", from.saldo);
-    printf("Saldo de c2: %d\n", to.saldo);
+    else 
+    {
+        printf("Thread %i possuia saldo insuficiente para transferencia! c1: %d; c2: %d\n", tid, from.saldo, to.saldo);
+    }
+
+    //printf("Thread %i executou!, c1: %d; c2: %d\n", tid, from.saldo, to.saldo);
 }
 
 
@@ -39,40 +45,35 @@ int main()
     void *stack;
     pid_t pid;
     int i;
-    // Allocate the stack
-    stack = malloc(FIBER_STACK);
-    if (stack == 0)
-    {
-        perror("malloc: could not allocate stack");
-        exit(1);
-    }
 
     // Todas as contas começam com saldo 100
     from.saldo = 100;
     to.saldo = 100;
     printf("Transferindo 10 para a conta c2\n");
-    valor = 10;
-    pthread_t tid[10];
-    for (i = 0; i < 10; i++)
+    valor = 1;
+    int numThreads = 120;
+    pthread_t tid[numThreads];
+    for (i = 0; i < numThreads; i++)
     {
-        // Call the clone system call to create the child thread
-        pthread_create(&tid[i], NULL, transferencia, &i);
-        //printf("Teste");
+        int *arg = malloc(sizeof(*arg));
+        if ( arg == NULL ) {
+            fprintf(stderr, "Couldn't allocate memory for thread arg.\n");
+            exit(EXIT_FAILURE);
+        }
+        *arg = i;
+        pthread_create(&tid[i], NULL, transferencia, arg);
         if (pid == -1)
         {
            perror("clone");
            exit(2);
         }
-        //printf("teste");
     }
     int* ptr;
-    for (i=0; i < 10; i++){
-        pthread_join(tid[i], (void**)&ptr);
+    for (i=0; i < numThreads; i++){
+        pthread_join(tid[i], (void**)&ptr); 
     }
 
-    // Free the stack
     //pthread_exit(NULL);
-    free(stack);
     printf("Transferências concluídas e memória liberada.\n");
     
     return 0;

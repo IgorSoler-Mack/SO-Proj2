@@ -8,8 +8,6 @@
 #include <stdio.h>
 #include <pthread.h>
 
-// 64kB stack
-#define FIBER_STACK 1024 * 64
 struct c
 {
     int saldo;
@@ -18,6 +16,7 @@ struct c
 typedef struct c conta;
 conta from, to;
 int valor;
+pthread_mutex_t mutex;
 
 // The child thread will execute this function
 void *transferencia(void *arg)
@@ -25,6 +24,7 @@ void *transferencia(void *arg)
     int tid = *((int *) arg);
     free(arg);
 
+    pthread_mutex_lock(&mutex);
     if (from.saldo >= valor)
     { 
         from.saldo -= valor;
@@ -35,8 +35,7 @@ void *transferencia(void *arg)
     {
         printf("Thread %i possuia saldo insuficiente para transferencia! c1: %d; c2: %d\n", tid, from.saldo, to.saldo);
     }
-
-    //printf("Thread %i executou!, c1: %d; c2: %d\n", tid, from.saldo, to.saldo);
+    pthread_mutex_unlock(&mutex);
 }
 
 
@@ -44,15 +43,16 @@ int main()
 {
     void *stack;
     pid_t pid;
-    int i;
-
+    int i;  
+    
     // Todas as contas começam com saldo 100
-    from.saldo = 100;
-    to.saldo = 100;
-    printf("Transferindo 10 para a conta c2\n");
+    from.saldo = 10000;
+    to.saldo = 10000;
     valor = 1;
-    int numThreads = 120;
+    int numThreads = 10000;
     pthread_t tid[numThreads];
+    pthread_mutex_init(&mutex, NULL);
+
     for (i = 0; i < numThreads; i++)
     {
         int *arg = malloc(sizeof(*arg));
@@ -73,7 +73,7 @@ int main()
         pthread_join(tid[i], (void**)&ptr); 
     }
 
-    //pthread_exit(NULL);
+    pthread_mutex_destroy(&mutex);
     printf("Transferências concluídas e memória liberada.\n");
     
     return 0;

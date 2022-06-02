@@ -15,7 +15,7 @@ struct c
 typedef struct c conta;
 
 conta c1, c2;     // Contas 
-conta *from, *to; // Ponteiro usando nas transacoes
+conta *from, *to; // Ponteiros usados nas transacoes
 int valor; // Valor transferido por thread em cada transacao
 pthread_mutex_t mutex; // Mutex usado para tratar a concorrencia
 int terminou = 0; // Flag usada no While do Menu
@@ -86,23 +86,23 @@ int main()
         {
             int *arg = malloc(sizeof(*arg));
             if ( arg == NULL ) {
-                fprintf(stderr, "Couldn't allocate memory for thread arg.\n");
+                fprintf(stderr, "Não foi possível alocar memória para o arg\n");
                 exit(EXIT_FAILURE);
             }
             *arg = i;
             pthread_create(&tid[i], NULL, transferencia, arg);
             if (pid == -1)
             {
-            perror("clone");
-            exit(2);
+                printf("Erro ao criar a thread!");
+                exit(2);
             }
         }
         int* ptr;
         for (i=0; i < numThreads; i++){
-            pthread_join(tid[i], (void**)&ptr); 
+            pthread_join(tid[i], (void**)&ptr); //Aguarda que todas as threads finalizem antes de continuar
         }
 
-        pthread_mutex_destroy(&mutex);
+        pthread_mutex_destroy(&mutex); //Ao final do programa, destroi o mutex
         printf("\nTransferências concluídas e memória liberada.\n\n");
     }
     return 0;

@@ -26,7 +26,9 @@ void *transferencia(void *arg)
     int tid = *((int *) arg); // Pega o Thread ID
     free(arg); // Libera memoria usada pelos arguments da funcao
 
-    pthread_mutex_lock(&mutex); // A thread passa apenas se o mutex nao estiver travado
+    // A thread passa apenas se o mutex nao estiver travado
+    // Trava o mutex imediatamente depois de passar
+    pthread_mutex_lock(&mutex); 
     if (from->saldo >= valor){  // A transacao ocorre apenas se a conta "from" tiver saldo
         from->saldo -= valor;   // O valor e removido da conta "from"
         to->saldo += valor;     // e transferido para a conta "to"
@@ -35,7 +37,7 @@ void *transferencia(void *arg)
     else {
         printf("Thread %i Saldo insuficiente Conta1: %d; Conta2: %d\n", tid, from->saldo, to->saldo);
     }
-    pthread_mutex_unlock(&mutex);
+    pthread_mutex_unlock(&mutex); // Libera o mutex, assim permitindo que outra thread entre
 
 }
 
@@ -46,14 +48,14 @@ int main()
     int i;  
     
     // Todas as contas começam com saldo 10000
-    c1.saldo = 10000;
-    c2.saldo = 10000;
-    valor = 1; // Valor a ser transferido de uma conta para outra
+    c1.saldo = 10000; // Saldo Inicial da conta2
+    c2.saldo = 10000; // Saldo Inicial da conta1
+    valor = 1; // Valor a ser transferido por cada thread
     int numThreads; // Limite maximo de Threads
-    
-    pthread_mutex_init(&mutex, NULL);
-    int conta_selecionada;
+    int conta_selecionada; 
 
+    pthread_mutex_init(&mutex, NULL); // Inicializa o Mutex
+    
     while(!terminou){
         // Selecao de valor da transferencia
         printf("Saldo:\n");
@@ -71,6 +73,7 @@ int main()
         printf("> ");
         scanf("%i", &conta_selecionada);
 
+        // Seleciona qual conta recebe e qual transfere
         if(conta_selecionada == 0){
             break;
         }
@@ -82,6 +85,8 @@ int main()
             from = &c2;
             to = &c1;
         }
+
+        // Cria todas as threads necessarias
         for (i = 0; i < numThreads; i++)
         {
             int *arg = malloc(sizeof(*arg));
@@ -97,13 +102,15 @@ int main()
             exit(2);
             }
         }
+
         int* ptr;
+        // Espera cada thread finalizar
         for (i=0; i < numThreads; i++){
             pthread_join(tid[i], (void**)&ptr); 
         }
 
-        pthread_mutex_destroy(&mutex);
         printf("\nTransferências concluídas e memória liberada.\n\n");
     }
+    pthread_mutex_destroy(&mutex); // Destroi o Mutex
     return 0;
 }

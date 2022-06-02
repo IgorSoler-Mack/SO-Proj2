@@ -108,11 +108,6 @@ int main()
         for (i=0; i < numThreads; i++){
             pthread_join(tid[i], (void**)&ptr); //Aguarda que todas as threads finalizem antes de continuar
         }
-
-<<<<<<< HEAD
-        pthread_mutex_destroy(&mutex); //Ao final do programa, destroi o mutex
-=======
->>>>>>> c3c4bfbffe37bf5a0f9b9c04031739d247ba4445
         printf("\nTransferências concluídas e memória liberada.\n\n");
     }
     pthread_mutex_destroy(&mutex); // Destroi o Mutex
